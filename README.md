@@ -3,12 +3,15 @@
 ## Dependencies
 
 EOS
+
 python
 
 ## Setup
 
 Clone repo and cd to "tolls" dir
+
 Start nodeos
+
 --data_dir and --config-dir create new default chain in current directory
 
 ```
@@ -31,7 +34,7 @@ Create tolls account
 cleos create account eosio tolls {public key #1} {public key #1}
 ```
 
-Compile and deploy smart contract,
+Compile and deploy smart contract.
 
 I use the following shell script with "tolls tolls" as the arguments:
 
