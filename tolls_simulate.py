@@ -13,7 +13,8 @@ chars = ["1", "2", "3","4","5","a","b",
             "c","d","e","f","g","h","i","j","k","l",
             "m","n","o","p","q","r","s","t","u","v","x","y","z"]
 
-num_gates = 100
+key = 'EOS5Z3kzmLZ72iCJ1ZUYHfPRLzstMBHM9hNk7oTTQnF4eszaMmGa1'
+num_gates = 1
 toll_gates = []
 
 for i in range (0, num_gates):
@@ -28,37 +29,40 @@ for i in range (0, num_gates):
     toll_gates.append(id)
 
     # create the account
-    command = "cleos create account eosio " + id + " EOS5H53JTqPpKcUw5KYg81top3Viit4HqUvqjkVifXiFqteixvT7G EOS5H53JTqPpKcUw5KYg81top3Viit4HqUvqjkVifXiFqteixvT7G"
+    command = "cleos create account eosio " + id + " " + key + " " + key
     call(command, shell=True)
 
     # create the toll gate
-    command = "cleos push action tolls create \'[\"" + id + "\",\"" + gatename + "\"," + str(latitude) + "," + str(longitude) + ",\"" + highway_name + "\"," + str(highway_number) + ",\"" + direction + "\"]\' -p " + id ;
+    command = "cleos push action tolls createtg \'[\"" + id + "\",\"" + gatename + "\"," + str(latitude) + "," + str(longitude) + ",\"" + highway_name + "\"," + str(highway_number) + ",\"" + direction + "\"]\' -p " + id ;
     call (command, shell=True)
 
 
-num_vehicles = 100
-vehicles = []
+num_tgus = 2
+tgus = []
 
-for i in range(0, num_vehicles):
+for i in range(0, num_tgus):
 
     vid = chars[random.randint(0, len(chars)-1)] + chars[random.randint(0, len(chars)-1)] + chars[random.randint(0, len(chars)-1)] + chars[random.randint(0, len(chars)-1)] + chars[random.randint(0, len(chars)-1)]
-    vehicles.append(vid);
+    tgus.append(vid);
 
     # create the account
-    command = "cleos create account eosio " + vid + " EOS5H53JTqPpKcUw5KYg81top3Viit4HqUvqjkVifXiFqteixvT7G EOS5H53JTqPpKcUw5KYg81top3Viit4HqUvqjkVifXiFqteixvT7G"
+    command = "cleos create account eosio " + vid + " " + key + " " + key
     call(command, shell=True)
 
+    # create the toll gate user
+    command = "cleos push action tolls createtgu \'[\"" + vid + "\"]\' -p " + vid
+    print (command)
+    call(command, shell=True)
 
-num_breaches = 1000
+num_breaches = 6
 
 for i in range (0, num_breaches):
-
     gate = toll_gates[random.randint(0, len(toll_gates)-1)]
-    vehicle = vehicles[random.randint(0, len(vehicles)-1)]
-    breach_id = int(hashlib.sha256(gate + vehicle + str(datetime.datetime.now())).hexdigest(), 16) % 1000000
+    tgu = tgus[random.randint(0, len(tgus)-1)]
+    breach_id = int(hashlib.sha256(gate + tgu + str(datetime.datetime.now())).hexdigest(), 16) % 1000000
 
-    command = "cleos push action tolls breachtoll \'[" + str(breach_id) + ",\"" + gate + "\",\"" + vehicle + "\"]\' -p " + gate + " -p " + vehicle
-    #print (command)
+    command = "cleos push action tolls breachtg \'[" + str(breach_id) + ",\"" + gate + "\",\"" + tgu + "\"]\' -p " + gate + " -p " + tgu
+    print (command)
     call (command, shell=True)
 
 elapsed_time = time.time() - start_time
