@@ -14,7 +14,8 @@ chars = ["1", "2", "3","4","5","a","b",
             "m","n","o","p","q","r","s","t","u","v","x","y","z"]
 
 key = 'EOS5Z3kzmLZ72iCJ1ZUYHfPRLzstMBHM9hNk7oTTQnF4eszaMmGa1'
-num_gates = 1
+num_gates = 100
+trans = num_gates * 2
 toll_gates = []
 
 for i in range (0, num_gates):
@@ -37,7 +38,8 @@ for i in range (0, num_gates):
     call (command, shell=True)
 
 
-num_tgus = 2
+num_tgus = 250
+trans = trans + (num_tgus * 2)
 tgus = []
 
 for i in range(0, num_tgus):
@@ -54,16 +56,17 @@ for i in range(0, num_tgus):
     print (command)
     call(command, shell=True)
 
-num_breaches = 6
+num_breaches = 3000
 
 for i in range (0, num_breaches):
     gate = toll_gates[random.randint(0, len(toll_gates)-1)]
     tgu = tgus[random.randint(0, len(tgus)-1)]
     breach_id = int(hashlib.sha256(gate + tgu + str(datetime.datetime.now())).hexdigest(), 16) % 1000000
 
-    command = "cleos push action tolls breachtg \'[" + str(breach_id) + ",\"" + gate + "\",\"" + tgu + "\"]\' -p " + gate + " -p " + tgu
+    command = "cleos push action tolls breachtg \'[\"" + str(breach_id) + "\",\"" + gate + "\",\"" + tgu + "\"]\' -p " + gate + " -p " + tgu
     print (command)
     call (command, shell=True)
 
+trans = trans + num_breaches
 elapsed_time = time.time() - start_time
-print (time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+print (str(trans) + " transactions in " + time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))

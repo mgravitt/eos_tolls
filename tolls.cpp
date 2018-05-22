@@ -41,7 +41,7 @@ void tolls::createtgu(const account_name account) {
   print (name{account}, " Tollgate User (tgu) created.");
 }
 
-void tolls::breachtg( const uint32_t breachId,
+void tolls::breachtg(   const uint32_t breachId,
                         const account_name tg,
                         const account_name tgu)  {
 
@@ -50,7 +50,12 @@ void tolls::breachtg( const uint32_t breachId,
 
   // add toll gate breach
   tgb_table tgb(_self, _self);
+  // auto itr = tgu.find(account);
+  // eosio_assert(itr == tgu.end(), "Tollgate User (tgu) already exists");
+
+  print (tgb.available_primary_key());
   tgb.emplace(tgu, [&](auto& t) {
+    t.pkey                = tgb.available_primary_key();
     t.breachId            = breachId;
     t.tg                  = tg;
     t.tgu                 = tgu;
@@ -63,9 +68,54 @@ void tolls::breachtg( const uint32_t breachId,
   eosio_assert(iterator != tgu_t.end(), "Tollgate user (tgu) not found.");
 
   tgu_t.modify(iterator, tgu, [&](auto& t) {
-    t.balance++;
+    t.balance = t.balance + 2;
   });
 
   //print (name{tg}, tollId);
   print (name{tg}, " tollgate (tg) breached.");
+}
+
+void tolls::cleartgus (const account_name acct) {
+
+  require_auth(acct);
+  tgu_table tgu(_self, _self);
+  int counter = 0;
+  auto iterator = tgu.begin();
+  while (iterator != tgu.end()) {
+    iterator = tgu.erase(iterator);
+    counter++;
+  }
+  print (counter, " toll gate user records erased.");
+}
+
+void tolls::cleartgs (const account_name acct) {
+
+  require_auth(acct);
+  tg_table tgs(_self, _self);
+  int counter = 0;
+  auto iterator = tgs.begin();
+  while (iterator != tgs.end()) {
+    iterator = tgs.erase(iterator);
+    counter++;
+  }
+  print (counter, " toll gate records erased.");
+}
+
+void tolls::cleartgbs (const account_name acct) {
+
+  require_auth(acct);
+  tgb_table tgb(_self, _self);
+  int counter = 0;
+  auto iterator = tgb.begin();
+  while (iterator != tgb.end()) {
+    iterator = tgb.erase(iterator);
+    counter++;
+  }
+  print (counter, " toll gate breach records erased.");
+}
+
+void tolls::clearall (const account_name acct) {
+  cleartgbs(acct);
+  cleartgs(acct);
+  cleartgus(acct);
 }
