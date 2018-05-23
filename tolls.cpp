@@ -124,5 +124,5 @@ void tolls::byuser(account_name account) {
     auto itr = user_index.lower_bound(account);
 
     for(; itr != user_index.end() && itr->tgu == account; ++itr)
-        print(name{itr->tgu}, " breached ", itr->tg, " on ", itr->timestamp);
+        print(name{itr->tgu}, " breached ", itr->tg, " on ", itr->timestamp), "...";
 }

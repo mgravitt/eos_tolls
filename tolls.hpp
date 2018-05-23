@@ -78,22 +78,14 @@ private:
 
     typedef eosio::multi_index<N(tgbs), tgb,
             indexed_by< N(tgu),
-                const_mem_fun<tgb, uint32_t, &tgb::by_user>
+                const_mem_fun<tgb, account_name, &tgb::by_user>
             >
         > tgb_table;
 
-    // typedef eosio::multi_index<N(profiles), profile,
-    //         indexed_by< N(age),
-    //             const_mem_fun<profile, uint64_t, &profile::by_age>
-    //         >
-    //     > profile_table;
-    //
-    //
     // @abi table tgus i64
     struct tgu {
       account_name    account;
       uint32_t        balance;
-    //  float           balance;
 
       account_name primary_key() const {return account; }
       EOSLIB_SERIALIZE(tgu, (account)(balance));
