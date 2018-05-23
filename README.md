@@ -64,15 +64,26 @@ cleos set contract tolls ../tolls
 
 ## Run the Simulator
 
+### Python Simulator
+
 Run python driver script to create accounts for toll gates, toll gate users, and then breach the tolls. The toll gate users' balances are incremented each time a toll gate is breached.
 
 ```
 python tolls_simulate.py
 ```
 
+### C++ Simulator
+
+```
+g++ tolls_driver.cpp
+./a.out
+```
+
 You can modify the "num_gates", "num_tgus", and "num_breaches" to change how many gates, users, and breaches are created / executed.
 
 ## View the Results
+
+The C++ driver runs about 130 TPS on my single EOS node running my laptop.
 
 You cam then view the tables to see tollgates, toll gate users, and breaches:
 
