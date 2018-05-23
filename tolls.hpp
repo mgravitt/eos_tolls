@@ -39,6 +39,8 @@ public:
   // @abi action
   void clearall (const account_name);
 
+  // @abi action
+  void byuser (const account_name);
 
 private:
 
@@ -66,15 +68,27 @@ private:
       uint32_t        pkey;     // b-chain generated
       uint32_t        breachId; // dapp generated
       account_name    tg;
-      account_name    tgu; //vehicle
+      account_name    tgu;
       uint32_t        timestamp;
 
       uint32_t primary_key() const { return  breachId; }
+      account_name     by_user() const { return tgu; }
       EOSLIB_SERIALIZE(tgb, (pkey)(breachId)(tg)(tgu)(timestamp));
     };
 
-    typedef eosio::multi_index<N(tgbs), tgb> tgb_table;
+    typedef eosio::multi_index<N(tgbs), tgb,
+            indexed_by< N(tgu),
+                const_mem_fun<tgb, uint32_t, &tgb::by_user>
+            >
+        > tgb_table;
 
+    // typedef eosio::multi_index<N(profiles), profile,
+    //         indexed_by< N(age),
+    //             const_mem_fun<profile, uint64_t, &profile::by_age>
+    //         >
+    //     > profile_table;
+    //
+    //
     // @abi table tgus i64
     struct tgu {
       account_name    account;
@@ -88,4 +102,4 @@ private:
     typedef eosio::multi_index<N(tgus), tgu> tgu_table;
 };
 
-EOSIO_ABI(tolls, (createtg)(createtgu)(breachtg)(cleartgbs)(cleartgs)(cleartgus)(clearall))
+EOSIO_ABI(tolls, (createtg)(createtgu)(breachtg)(cleartgbs)(cleartgs)(cleartgus)(clearall)(byuser))

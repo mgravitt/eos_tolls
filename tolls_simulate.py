@@ -56,7 +56,7 @@ for i in range(0, num_tgus):
     print (command)
     call(command, shell=True)
 
-num_breaches = 3000
+num_breaches = 30000
 
 for i in range (0, num_breaches):
     gate = toll_gates[random.randint(0, len(toll_gates)-1)]

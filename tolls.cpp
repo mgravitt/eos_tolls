@@ -50,10 +50,6 @@ void tolls::breachtg(   const uint32_t breachId,
 
   // add toll gate breach
   tgb_table tgb(_self, _self);
-  // auto itr = tgu.find(account);
-  // eosio_assert(itr == tgu.end(), "Tollgate User (tgu) already exists");
-
-  print (tgb.available_primary_key());
   tgb.emplace(tgu, [&](auto& t) {
     t.pkey                = tgb.available_primary_key();
     t.breachId            = breachId;
@@ -118,4 +114,15 @@ void tolls::clearall (const account_name acct) {
   cleartgbs(acct);
   cleartgs(acct);
   cleartgus(acct);
+}
+
+void tolls::byuser(account_name account) {
+    tgb_table tgb(_self, _self);
+
+    auto user_index = tgb.get_index<N(tgu)>();
+
+    auto itr = user_index.lower_bound(account);
+
+    for(; itr != user_index.end() && itr->tgu == account; ++itr)
+        print(name{itr->tgu}, " breached ", itr->tg, " on ", itr->timestamp);
 }
