@@ -1,5 +1,12 @@
 # EOS Toll Gate Simulator
 
+## Motivation / Background
+
+Chose a toll gate model to challenge the throughput and micro-transaction aspects of EOS. This simulation / model includes
+toll gates, vehicles, riders, and toll gate breaches. Riders can check-in and check-out of vehicles (requires authorization from both rider and vehicle). Each toll gate decides how much to charge for each breach. When a vehicle breaches a toll gate, each of the current riders in the vehicle are charged equal amounts.
+
+Future enhancements will include exempting the driver from paying any toll, allowing the driver to charge riders based on the time they are in the car (like Uber), and giving toll gates the ability to price dynamically based on various parameters.
+
 ## Dependencies
 
 EOS
@@ -26,6 +33,12 @@ cleos create key > keys
 cleos create key >> keys
 cleos wallet import {private key #1}
 cleos wallet import {private key #2}
+```
+
+Set the bios contract
+
+```
+cleos set contract eosio <path>/<to>/eos/build/contracts/eosio.bios -p eosio
 ```
 
 Create tolls account

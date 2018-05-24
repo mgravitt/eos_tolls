@@ -6,7 +6,8 @@ void tolls::createtg (const account_name account,
                       uint32_t              longitude,
                       const string&         highway_name,
                       uint32_t              highway_number,
-                      const string&         direction) {
+                      const string&         direction,
+                      uint32_t              tollamount) {
 
   require_auth (account);
 
@@ -23,6 +24,7 @@ void tolls::createtg (const account_name account,
     t.highway_name    = highway_name;
     t.highway_number  = highway_number;
     t.direction       = direction;
+    t.tollamount      = tollamount;
   });
 
   print (name{account}, " Tollgate (tg) created.");
@@ -43,29 +45,40 @@ void tolls::createtgu(const account_name account) {
 
 void tolls::breachtg(   const uint32_t breachId,
                         const account_name tg,
-                        const account_name tgu)  {
-
+                        const account_name vehicleacct)  {
   require_auth (tg);
-  require_auth (tgu);
+  require_auth (vehicleacct);
+
+  tg_table tg_t(_self, _self);
+  auto tg_itr = tg_t.find(tg);
+  eosio_assert(tg_itr != tg_t.end(), "Toll gate does not exist.");
 
   // add toll gate breach
   tgb_table tgb(_self, _self);
-  tgb.emplace(tgu, [&](auto& t) {
+  tgb.emplace(vehicleacct, [&](auto& t) {
     t.pkey                = tgb.available_primary_key();
     t.breachId            = breachId;
     t.tg                  = tg;
-    t.tgu                 = tgu;
+    t.vehicle             = vehicleacct;
     t.timestamp           = now();
+    t.tollamount          = tg_itr->tollamount;
   });
 
-  // increment balance on the toll gate user table
-  tgu_table tgu_t (_self, _self);
-  auto iterator = tgu_t.find(tgu);
-  eosio_assert(iterator != tgu_t.end(), "Tollgate user (tgu) not found.");
+  //increment balance on the toll gate user table
+  veh_table vehicle(_self, _self);
+  tgu_table tgu_t(_self, _self);
 
-  tgu_t.modify(iterator, tgu, [&](auto& t) {
-    t.balance = t.balance + 2;
-  });
+  auto v_itr = vehicle.find(vehicleacct);
+  eosio_assert(v_itr != vehicle.end(), "Vehicle does not exist");
+
+  for (auto rider : v_itr->riders) {
+    auto itr = tgu_t.find(rider);
+    eosio_assert(itr != tgu_t.end(), "Tollgate User (tgu) does not exist.");
+    tgu_t.modify(itr, rider, [&](auto& t) {
+      // rider pays the total toll divided by # of riders
+      t.balance = t.balance + (tg_itr->tollamount / v_itr->riders.size());
+    });
+  }
 
   print (name{tg}, " tollgate (tg) breached.");
 }
@@ -155,13 +168,13 @@ void tolls::clearall (const account_name acct) {
   cleartgus(acct);
 }
 
-void tolls::byuser(account_name account) {
+void tolls::byvehicle(account_name account) {
     tgb_table tgb(_self, _self);
 
     auto user_index = tgb.get_index<N(tgu)>();
 
     auto itr = user_index.lower_bound(account);
 
-    for(; itr != user_index.end() && itr->tgu == account; ++itr)
-        print(name{itr->tgu}, " breached ", itr->tg, " on ", itr->timestamp, "...");
+    for(; itr != user_index.end() && itr->vehicle == account; ++itr)
+        print(name{itr->vehicle}, " breached ", itr->tg, " on ", itr->timestamp, "...");
 }

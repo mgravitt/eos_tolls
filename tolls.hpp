@@ -13,6 +13,7 @@ using std::string;
   tgu     = Toll Gate User    (this would be like a rider / payer)
   tgb     = Toll Gate Breach  (when a vehicle breaches a toll gate)
   vehicle = Container of Toll Gate Users, Users enter / exit vehicles
+  "rider" = when a user is in a vehicle, they are a rider
 
   tg, tgu, and vehicles are all accounts
   many activities require multisig:
@@ -32,7 +33,8 @@ public:
                    uint32_t              longitude,
                    const string&         highway_name,
                    uint32_t              highway_number,
-                   const string&         direction);
+                   const string&         direction,
+                   uint32_t              tollamount);
 
   // @abi action
   void createtgu ( const account_name   account);
@@ -40,8 +42,7 @@ public:
   // @abi action
   void breachtg (  const uint32_t       breachId,
                    const account_name   tg,
-                   const
-                   const account_name   tgu);
+                   const account_name   vehicleacct);
 
   // @abi action
   void createveh ( const account_name);
@@ -67,7 +68,7 @@ public:
   void clearall (const account_name);
 
   // @abi action
-  void byuser (const account_name);
+  void byvehicle (const account_name);
 
 private:
 
@@ -80,10 +81,11 @@ private:
       string          highway_name;
       uint32_t        highway_number;
       string          direction;
+      uint32_t        tollamount;
 
       account_name primary_key() const { return account; }
 
-      EOSLIB_SERIALIZE(tg, (account)(gatename)(latitude)(longitude)(highway_name)(highway_number)(direction))
+      EOSLIB_SERIALIZE(tg, (account)(gatename)(latitude)(longitude)(highway_name)(highway_number)(direction)(tollamount))
     };
 
     typedef eosio::multi_index<N(tgs), tg> tg_table;
@@ -95,17 +97,18 @@ private:
       uint32_t        pkey;     // b-chain generated
       uint32_t        breachId; // dapp generated
       account_name    tg;
-      account_name    tgu;
+      account_name    vehicle;
       uint32_t        timestamp;
+      uint32_t        tollamount;
 
       uint32_t primary_key() const { return  breachId; }
-      account_name     by_user() const { return tgu; }
-      EOSLIB_SERIALIZE(tgb, (pkey)(breachId)(tg)(tgu)(timestamp));
+      account_name     by_vehicle() const { return vehicle; }
+      EOSLIB_SERIALIZE(tgb, (pkey)(breachId)(tg)(vehicle)(timestamp)(tollamount));
     };
 
     typedef eosio::multi_index<N(tgbs), tgb,
             indexed_by< N(tgu),
-                const_mem_fun<tgb, account_name, &tgb::by_user>
+                const_mem_fun<tgb, account_name, &tgb::by_vehicle>
             >
         > tgb_table;
 
@@ -124,7 +127,6 @@ private:
     struct vehicle {
       account_name          account;
       vector<account_name>  riders;
-      //uint32_t              riders;
 
       account_name primary_key() const { return account; }
       EOSLIB_SERIALIZE(vehicle, (account)(riders));
@@ -134,4 +136,4 @@ private:
 
 };
 
-EOSIO_ABI(tolls, (createtg)(createtgu)(createveh)(addrider)(remrider)(breachtg)(cleartgbs)(cleartgs)(cleartgus)(clearall)(byuser))
+EOSIO_ABI(tolls, (createtg)(createtgu)(createveh)(addrider)(remrider)(breachtg)(cleartgbs)(cleartgs)(cleartgus)(clearall)(byvehicle))
