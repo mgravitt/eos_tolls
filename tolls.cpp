@@ -67,8 +67,47 @@ void tolls::breachtg(   const uint32_t breachId,
     t.balance = t.balance + 2;
   });
 
-  //print (name{tg}, tollId);
   print (name{tg}, " tollgate (tg) breached.");
+}
+
+void tolls::createveh (const account_name account) {
+  require_auth(account);
+  veh_table vehicle(_self, _self);
+  auto itr = vehicle.find(account);
+  eosio_assert(itr == vehicle.end(), "Vehicle already exists");
+
+  vehicle.emplace (account, [&](auto& v) {
+    v.account      = account;
+  });
+
+  print (name{account}, " vehicle created.");
+}
+
+void tolls::addrider (const account_name vehaccount,
+                      const account_name ridaccount) {
+  require_auth(ridaccount);
+  require_auth(vehaccount);
+  veh_table vehicle(_self, _self);
+  auto itr = vehicle.find(vehaccount);
+  eosio_assert(itr != vehicle.end(), "Vehicle does not exist");
+
+  vehicle.modify (itr, vehaccount, [&](auto& v) {
+    v.riders.push_back (ridaccount);
+  });
+}
+
+void tolls::remrider (const account_name vehaccount,
+                      const account_name ridaccount) {
+  require_auth(ridaccount);
+  require_auth(vehaccount);
+  veh_table vehicle(_self, _self);
+  auto itr = vehicle.find(vehaccount);
+  eosio_assert(itr != vehicle.end(), "Vehicle does not exist");
+
+  vehicle.modify (itr, vehaccount, [&](auto& v) {
+  //  v.riders.erase (ridaccount);
+    v.riders.erase(std::remove(v.riders.begin(), v.riders.end(), ridaccount), v.riders.end());
+  });
 }
 
 void tolls::cleartgus (const account_name acct) {
@@ -124,5 +163,5 @@ void tolls::byuser(account_name account) {
     auto itr = user_index.lower_bound(account);
 
     for(; itr != user_index.end() && itr->tgu == account; ++itr)
-        print(name{itr->tgu}, " breached ", itr->tg, " on ", itr->timestamp), "...";
+        print(name{itr->tgu}, " breached ", itr->tg, " on ", itr->timestamp, "...");
 }

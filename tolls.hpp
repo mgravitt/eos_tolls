@@ -6,6 +6,21 @@
 using namespace eosio;
 using std::string;
 
+/*
+  Some helpful abbreviations / definitions:
+
+  tg      = Toll Gate         (e.g. Garden State Pkwy Exit 6 Northbound)
+  tgu     = Toll Gate User    (this would be like a rider / payer)
+  tgb     = Toll Gate Breach  (when a vehicle breaches a toll gate)
+  vehicle = Container of Toll Gate Users, Users enter / exit vehicles
+
+  tg, tgu, and vehicles are all accounts
+  many activities require multisig:
+    - vehicle + tg sign each breach
+    - vehicle + tgu sign entering and existing vehicle
+
+*/
+
 class tolls: public contract {
 public:
   tolls(account_name self) : contract (self) {}
@@ -25,7 +40,19 @@ public:
   // @abi action
   void breachtg (  const uint32_t       breachId,
                    const account_name   tg,
+                   const
                    const account_name   tgu);
+
+  // @abi action
+  void createveh ( const account_name);
+
+  // @abi action
+  void addrider ( const account_name vehaccount,
+                  const account_name ridaccout);
+
+  // @abi action
+  void remrider ( const account_name vehaccount,
+                  const account_name ridaccout);
 
   // @abi action
   void cleartgbs (const account_name);
@@ -92,6 +119,19 @@ private:
     };
 
     typedef eosio::multi_index<N(tgus), tgu> tgu_table;
+
+    // @abi table vehicles i64
+    struct vehicle {
+      account_name          account;
+      vector<account_name>  riders;
+      //uint32_t              riders;
+
+      account_name primary_key() const { return account; }
+      EOSLIB_SERIALIZE(vehicle, (account)(riders));
+    };
+
+    typedef eosio::multi_index<N(vehicles), vehicle> veh_table;
+
 };
 
-EOSIO_ABI(tolls, (createtg)(createtgu)(breachtg)(cleartgbs)(cleartgs)(cleartgus)(clearall)(byuser))
+EOSIO_ABI(tolls, (createtg)(createtgu)(createveh)(addrider)(remrider)(breachtg)(cleartgbs)(cleartgs)(cleartgus)(clearall)(byuser))
