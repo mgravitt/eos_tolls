@@ -38,6 +38,8 @@ void tolls::createtgu(const account_name account) {
 
   tgu.emplace (account, [&](auto& t) {
     t.account      = account;
+    t.balance      = 0;
+    t.timein       = 0;
   });
 
   print (name{account}, " Tollgate User (tgu) created.");
@@ -83,7 +85,9 @@ void tolls::breachtg(   const uint32_t breachId,
   print (name{tg}, " tollgate (tg) breached.");
 }
 
-void tolls::createveh (const account_name account) {
+void tolls::createveh (const account_name account,
+                      const uint32_t hourly_rate) {
+
   require_auth(account);
   veh_table vehicle(_self, _self);
   auto itr = vehicle.find(account);
@@ -91,6 +95,7 @@ void tolls::createveh (const account_name account) {
 
   vehicle.emplace (account, [&](auto& v) {
     v.account      = account;
+    v.hourly_rate  = hourly_rate;
   });
 
   print (name{account}, " vehicle created.");
@@ -107,6 +112,15 @@ void tolls::addrider (const account_name vehaccount,
   vehicle.modify (itr, vehaccount, [&](auto& v) {
     v.riders.push_back (ridaccount);
   });
+
+  tgu_table tgu_t(_self, _self);
+  auto r_itr = tgu_t.find(ridaccount);
+  eosio_assert(r_itr != tgu_t.end(), "Rider does not exist as a user.");
+  eosio_assert(r_itr->timein == 0, "Rider is already in a vehicle.");
+
+  tgu_t.modify(r_itr, ridaccount, [&](auto& t) {
+    t.timein = now();
+  });
 }
 
 void tolls::remrider (const account_name vehaccount,
@@ -114,12 +128,21 @@ void tolls::remrider (const account_name vehaccount,
   require_auth(ridaccount);
   require_auth(vehaccount);
   veh_table vehicle(_self, _self);
-  auto itr = vehicle.find(vehaccount);
-  eosio_assert(itr != vehicle.end(), "Vehicle does not exist");
+  auto v_itr = vehicle.find(vehaccount);
+  eosio_assert(v_itr != vehicle.end(), "Vehicle does not exist");
 
-  vehicle.modify (itr, vehaccount, [&](auto& v) {
-  //  v.riders.erase (ridaccount);
+  vehicle.modify (v_itr, vehaccount, [&](auto& v) {
     v.riders.erase(std::remove(v.riders.begin(), v.riders.end(), ridaccount), v.riders.end());
+    print (name{ridaccount}, " checked out of vehicle ", name{vehaccount});
+  });
+
+  tgu_table tgu_t(_self, _self);
+  auto r_itr = tgu_t.find(ridaccount);
+  eosio_assert(r_itr != tgu_t.end(), "Rider does not exist as a user.");
+
+  tgu_t.modify(r_itr, ridaccount, [&](auto& t) {
+    t.balance = t.balance + (now() - t.timein) * (v_itr->hourly_rate / 60 / 60);
+    t.timein = 0;
   });
 }
 

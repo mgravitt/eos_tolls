@@ -34,7 +34,7 @@ public:
                    const string&         highway_name,
                    uint32_t              highway_number,
                    const string&         direction,
-                   uint32_t              tollamount);
+                   uint32_t              tollamount);//,
 
   // @abi action
   void createtgu ( const account_name   account);
@@ -45,7 +45,8 @@ public:
                    const account_name   vehicleacct);
 
   // @abi action
-  void createveh ( const account_name);
+  void createveh ( const account_name,
+                   const uint32_t);
 
   // @abi action
   void addrider ( const account_name vehaccount,
@@ -116,9 +117,10 @@ private:
     struct tgu {
       account_name    account;
       uint32_t        balance;
+      uint32_t        timein;
 
       account_name primary_key() const {return account; }
-      EOSLIB_SERIALIZE(tgu, (account)(balance));
+      EOSLIB_SERIALIZE(tgu, (account)(balance)(timein));
     };
 
     typedef eosio::multi_index<N(tgus), tgu> tgu_table;
@@ -126,10 +128,11 @@ private:
     // @abi table vehicles i64
     struct vehicle {
       account_name          account;
+      uint32_t              hourly_rate;
       vector<account_name>  riders;
 
       account_name primary_key() const { return account; }
-      EOSLIB_SERIALIZE(vehicle, (account)(riders));
+      EOSLIB_SERIALIZE(vehicle, (account)(hourly_rate)(riders));
     };
 
     typedef eosio::multi_index<N(vehicles), vehicle> veh_table;
